@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {% load static %}
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #2B2D33;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      border-radius: 16px;
+      padding: 25px;
+    }
+
+    .btn-custom {
+      background-color: #0671B8;
+      color: white;
+      font-weight: 600;
+    }
+
+    .btn-custom:hover {
+      background-color: #055a9a;
+    }
+
+    .logo {
+      max-height: 60px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card login-card text-center bg-white">
+
+  <!-- LOGO -->
+  {% load static %}
+
+    <img src="{% static 'usuarios/IMAGES/logoJuanDelSur.jpg' %}" class="logo">
+
+  <h6>Supermercado Juan Del Sur</h6>
+
+  <!-- ERROR -->
+  {% if error %}
+    <div class="alert alert-danger p-2">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="mb-3 text-start">
+      <label>Usuario</label>
+      <input type="text" name="email" class="form-control" required>
+    </div>
+
+    <div class="mb-3 text-start">
+      <label>Contraseña</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-custom w-100">
+      Entrar
+    </button>
+  </form>
+
+  <div class="mt-2">
+    <small>
+      ¿No tienes cuenta?
+      <a href="{% url 'register' %}">Registrarse</a>
+    </small>
+  </div>
+
+</div>
+
+</body>
+</html>

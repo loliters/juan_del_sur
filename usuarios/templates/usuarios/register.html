@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro - Sistema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {% load static %}
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #2B2D33;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card-form {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      background: white;
+    }
+
+    .logo {
+      max-height: 50px;
+      margin-bottom: 5px;
+    }
+
+    h5 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 0.85rem;
+    }
+
+    .form-control, .form-select {
+      font-size: 0.9rem;
+    }
+
+    .btn-main {
+      background-color: #0671B8;
+      color: white;
+      font-weight: bold;
+    }
+
+    .btn-main:hover {
+      background-color: #055a9a;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card-form text-center">
+
+  <!-- LOGO -->
+  <img src="{% static 'IMAGES/logoJuanDelSur.jpg' %}" class="logo">
+
+  <h6>Supermercado Juan Del Sur</h6>
+  <small class="text-muted">Sucursal Los Pinos</small>
+
+  <h5 class="mt-2">Crear Usuario</h5>
+
+  <!-- FORM DJANGO -->
+  <form method="POST">
+    {% csrf_token %}
+
+    <!-- Usuario -->
+    <div class="mb-2 text-start">
+      <label>Usuario</label>
+      <input type="text" name="nom_usuario" class="form-control" required>
+    </div>
+
+    <!-- Apellido 1 -->
+    <div class="mb-2 text-start">
+      <label>Primer Apellido</label>
+      <input type="text" name="ap1" class="form-control" required>
+    </div>
+
+    <!-- Apellido 2 -->
+    <div class="mb-2 text-start">
+      <label>Segundo Apellido</label>
+      <input type="text" name="ap2" class="form-control">
+    </div>
+
+    <!-- Email -->
+    <div class="mb-2 text-start">
+      <label>Correo</label>
+      <input type="email" name="email" class="form-control" required>
+    </div>
+
+    <!-- 🔥 ROL (AQUÍ LO AGREGO BIEN) -->
+    <div class="mb-2 text-start">
+      <label>Rol</label>
+      <select name="rol" class="form-select" required>
+        <option value="">Seleccione un rol</option>
+
+        {% for r in roles %}
+          <option value="{{ r.id }}">{{ r.nom_rol }}</option>
+        {% endfor %}
+
+      </select>
+    </div>
+
+    <!-- Password -->
+    <div class="mb-2 text-start">
+      <label>Contraseña</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+
+    <!-- Estado -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <label class="mb-0">Estado</label>
+      <input type="checkbox" name="estado" checked>
+    </div>
+
+    <!-- BOTONES -->
+    <button type="submit" class="btn btn-main w-100 mb-2">
+      Registrar
+    </button>
+
+    <a href="{% url 'login' %}" class="small">
+      ¿Ya tienes cuenta?
+    </a>
+
+  </form>
+
+</div>
+
+</body>
+</html>
