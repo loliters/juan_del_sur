@@ -10,7 +10,9 @@ from .models import Usuario, Rol
 # =========================
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import check_password
+from django.contrib import messages
 from .models import Usuario
+import re
 
 
 def login_view(request):
@@ -20,48 +22,68 @@ def login_view(request):
         email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
 
-        # validación básica
+        #  Validación básica
         if not email or not password:
-            return render(request, 'usuarios/login.html', {
-                'error': 'Completa todos los campos'
-            })
+            messages.error(request, 'Completa todos los campos')
+            return redirect('login')
+
+        #  Validar formato de email
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            messages.error(request, 'Correo inválido')
+            return redirect('login')
 
         try:
             user = Usuario.objects.select_related('rol').get(email__iexact=email)
         except Usuario.DoesNotExist:
-            return render(request, 'usuarios/login.html', {
-                'error': 'Usuario no existe'
-            })
+            messages.error(request, 'Usuario no existe')
+            return redirect('login')
 
-        # validar contraseña
+        #  Validar usuario activo
+        if not user.estado:
+            messages.error(request, 'Usuario deshabilitado')
+            return redirect('login')
+
+        #  Validar contraseña
         if not check_password(password, user.password):
-            return render(request, 'usuarios/login.html', {
-                'error': 'Contraseña incorrecta'
-            })
+            messages.error(request, 'Contraseña incorrecta')
+            return redirect('login')
 
-        # normalizar rol
+        #  Validar rol
+        if not user.rol or not user.rol.nom_rol:
+            messages.error(request, 'Usuario sin rol asignado')
+            return redirect('login')
+
         rol = user.rol.nom_rol.strip().lower()
 
-        # guardar sesión
+        #  Guardar sesión
         request.session['usuario_id'] = user.id
         request.session['rol'] = rol
         request.session['nombre'] = user.nom_usuario
 
-        # redirección por rol (CORREGIDO Y ROBUSTO)
+        # Redirección por rol
         if rol == "administrador":
             return redirect('dashboard_admin')
+
         elif rol == "cajero":
             return redirect('dashboard_cajero')
+
         else:
-            return render(request, 'usuarios/login.html', {
-                'error': 'Rol no válido'
-            })
+            messages.error(request, 'Rol no válido')
+            return redirect('login')
 
     return render(request, 'usuarios/login.html')
 
 # =========================
 # REGISTER
 # =========================
+from django.shortcuts import render, redirect
+from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
+from django.contrib import messages
+from .models import Usuario, Rol
+import re
+
+
 def register(request):
 
     roles = Rol.objects.all()
@@ -71,48 +93,84 @@ def register(request):
         nom_usuario = request.POST.get('nom_usuario', '').strip()
         ap1 = request.POST.get('ap1', '').strip()
         ap2 = request.POST.get('ap2', '').strip()
-        email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
         rol_id = request.POST.get('rol')
         estado = request.POST.get('estado') == 'on'
 
-        if not nom_usuario or not email or not password or not rol_id:
-            return render(request, 'usuarios/register.html', {
-                'roles': roles,
-                'error': 'Completa todos los campos obligatorios'
-            })
+        # 🔹 Validar nombre o apellido (CORREGIDO)
+        if not nom_usuario and not ap1 and not ap2:
+            messages.error(request, 'Debes ingresar al menos un nombre o un apellido')
+            return redirect('register')
 
+        # 🔹 Validar campos obligatorios
+        if not password or not rol_id:
+            messages.error(request, 'Completa todos los campos obligatorios')
+            return redirect('register')
+
+        # 🔐 Validar contraseña fuerte
+        if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&._-])[A-Za-z\d@$!%*#?&._-]{8,}$', password):
+            messages.error(request, 'La contraseña debe tener mínimo 8 caracteres, incluir letras, números y un carácter especial')
+            return redirect('register')
+
+        # 🔹 Obtener rol
         try:
             rol_obj = Rol.objects.get(id=rol_id)
         except Rol.DoesNotExist:
-            return render(request, 'usuarios/register.html', {
-                'roles': roles,
-                'error': 'Rol inválido'
-            })
+            messages.error(request, 'Rol inválido')
+            return redirect('register')
 
+        # 🔹 Generar correo empresarial
+        base = ""
+
+        if nom_usuario:
+            base += nom_usuario.split()[0].lower()
+
+        # elegir apellido disponible
+        apellido = ""
+        if ap1:
+            apellido = ap1
+        elif ap2:
+            apellido = ap2
+
+        if apellido:
+            if base:
+                base += "."
+            base += apellido.split()[0].lower()
+
+        dominio = "juandedios.com"
+        email_generado = f"{base}@{dominio}"
+
+        # 🔁 Evitar duplicados
+        contador = 1
+        email_final = email_generado
+
+        while Usuario.objects.filter(email=email_final).exists():
+            email_final = f"{base}{contador}@{dominio}"
+            contador += 1
+
+        # 💾 Guardar usuario
         try:
             Usuario.objects.create(
                 nom_usuario=nom_usuario,
                 ap1=ap1,
                 ap2=ap2,
-                email=email,
+                email=email_final,
                 password=make_password(password),
                 rol=rol_obj,
                 estado=estado
             )
 
         except IntegrityError:
-            return render(request, 'usuarios/register.html', {
-                'roles': roles,
-                'error': 'Ese email ya está registrado'
-            })
+            messages.error(request, 'Error al registrar usuario')
+            return redirect('register')
 
+        # 🔥 Mensaje + redirección
+        messages.success(request, f'Usuario creado correctamente. Tu correo es: {email_final}')
         return redirect('login')
 
     return render(request, 'usuarios/register.html', {
         'roles': roles
     })
-
 
 # =========================
 # DASHBOARD CAJERO

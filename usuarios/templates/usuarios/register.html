@@ -67,27 +67,46 @@
 <div class="card-form text-center">
 
   <!-- LOGO -->
-  <img src="{% static 'IMAGES/logoJuanDelSur.jpg' %}" class="logo">
+  {% load static %}
+
+    <img src="{% static 'usuarios/IMAGES/logoJuanDelSur.jpg' %}" class="logo">
 
   <h6>Supermercado Juan Del Sur</h6>
   <small class="text-muted">Sucursal Los Pinos</small>
 
   <h5 class="mt-2">Crear Usuario</h5>
 
-  <!-- FORM DJANGO -->
+  <!-- MENSAJES -->
+  <!--{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}-->
+  <!-- 🔔 MENSAJES DJANGO -->
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+  <!-- FORM -->
   <form method="POST">
     {% csrf_token %}
 
     <!-- Usuario -->
     <div class="mb-2 text-start">
-      <label>Usuario</label>
-      <input type="text" name="nom_usuario" class="form-control" required>
+      <label>Nombre</label>
+      <input type="text" id="nom_usuario" name="nom_usuario" class="form-control">
     </div>
 
     <!-- Apellido 1 -->
     <div class="mb-2 text-start">
       <label>Primer Apellido</label>
-      <input type="text" name="ap1" class="form-control" required>
+      <input type="text" id="ap1" name="ap1" class="form-control">
     </div>
 
     <!-- Apellido 2 -->
@@ -96,22 +115,20 @@
       <input type="text" name="ap2" class="form-control">
     </div>
 
-    <!-- Email -->
+    <!-- 🔥 Email generado -->
     <div class="mb-2 text-start">
-      <label>Correo</label>
-      <input type="email" name="email" class="form-control" required>
+      <label>Correo empresarial</label>
+      <input type="email" id="email" class="form-control" readonly placeholder="Se generará automáticamente">
     </div>
 
-    <!-- 🔥 ROL (AQUÍ LO AGREGO BIEN) -->
+    <!-- Rol -->
     <div class="mb-2 text-start">
       <label>Rol</label>
       <select name="rol" class="form-select" required>
         <option value="">Seleccione un rol</option>
-
         {% for r in roles %}
           <option value="{{ r.id }}">{{ r.nom_rol }}</option>
         {% endfor %}
-
       </select>
     </div>
 
@@ -119,15 +136,18 @@
     <div class="mb-2 text-start">
       <label>Contraseña</label>
       <input type="password" name="password" class="form-control" required>
+      <small class="text-muted">
+        Mínimo 8 caracteres, letras, números y símbolo
+      </small>
     </div>
 
     <!-- Estado -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <label class="mb-0">Estado</label>
+      <label class="mb-0">Activo</label>
       <input type="checkbox" name="estado" checked>
     </div>
 
-    <!-- BOTONES -->
+    <!-- BOTÓN -->
     <button type="submit" class="btn btn-main w-100 mb-2">
       Registrar
     </button>
@@ -139,6 +159,38 @@
   </form>
 
 </div>
+
+<!-- 🔥 SCRIPT GENERADOR -->
+<script>
+function generarCorreo() {
+    let nombre = document.getElementById("nom_usuario").value.trim().toLowerCase();
+    let apellido = document.getElementById("ap1").value.trim().toLowerCase();
+
+    let base = "";
+
+    if (nombre) {
+        base += nombre.split(" ")[0];
+    }
+
+    if (apellido) {
+        if (base !== "") {
+            base += ".";
+        }
+        base += apellido.split(" ")[0];
+    }
+
+    let dominio = "juandedios.com";
+
+    if (base !== "") {
+        document.getElementById("email").value = base + "@" + dominio;
+    } else {
+        document.getElementById("email").value = "";
+    }
+}
+
+document.getElementById("nom_usuario").addEventListener("input", generarCorreo);
+document.getElementById("ap1").addEventListener("input", generarCorreo);
+</script>
 
 </body>
 </html>
