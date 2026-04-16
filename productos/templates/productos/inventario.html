@@ -102,7 +102,7 @@
         <table class="table align-middle" id="tablaProductos">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Código</th>
                     <th>Producto</th>
                     <th>Categoría</th>
                     <th>Precio Compra</th>
@@ -115,12 +115,12 @@
             <tbody>
                 {% for p in productos %}
                 <tr>
-                    <td class="text-muted">{{ p.id }}</td>
-                    <td class="fw-medium">{{ p.nombre }}</td>
+                    <td class="text-muted">{{ p.codProducto }}</td>
+                    <td class="fw-medium">{{ p.nomProducto }}</td>
                     <td class="text-muted">{{ p.categoria }}</td>
-                    <td>${{ p.precio_compra }}</td>
-                    <td class="fw-bold">${{ p.precio_venta }}</td>
-                    <td>{{ p.stock }} uds</td>
+                    <td>${{ p.precioCompra }}</td>
+                    <td class="fw-bold">${{ p.precioVenta }}</td>
+                    <td>{{ p.stockActual }} {{p.tipoUnidad}}</td>
                     <td>
                         <span class="{% if p.estado == 'activo' %}badge-activo{% else %}badge-inactivo{% endif %}">
                             {{ p.get_estado_display }}

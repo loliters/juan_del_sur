@@ -13,43 +13,55 @@ def inventario(request):
 # Registrar nuevo producto
 def registrar(request):
     if request.method == 'POST':
-        nombre = request.POST.get('nombre')
+        codProducto = request.POST.get('codProducto')
+        nomProducto = request.POST.get('nomProducto')
         categoria = request.POST.get('categoria')
-        precio_compra = request.POST.get('precio_compra')
-        precio_venta = request.POST.get('precio_venta')
-        stock = request.POST.get('stock')
+        precioCompra = request.POST.get('precioCompra')
+        precioVenta = request.POST.get('precioVenta')
+        stockActual = request.POST.get('stockActual')
+        tipoUnidad = request.POST.get('tipoUnidad')
+
         
-        if not nombre:
+        if not nomProducto:
             messages.error(request, 'El nombre es obligatorio')
             return redirect('productos:registrar')
         
         producto = Producto.objects.create(
-            nombre=nombre,
+            codProducto=codProducto,
+            nomProducto=nomProducto,
             categoria=categoria,
-            precio_compra=precio_compra,
-            precio_venta=precio_venta,
-            stock=stock,
+            precioCompra=precioCompra,
+            precioVenta=precioVenta,
+            stockActual=stockActual,
+            tipoUnidad=tipoUnidad,
             estado='activo'  # ← minúscula
         )
-        
-        messages.success(request, f'Producto "{nombre}" creado exitosamente')
+
+
+
+        messages.success(request, f'Producto "{nomProducto}" creado exitosamente')
         return redirect('productos:inventario')
     
     categorias = ["Lacteos", "Pan", "Frutas", "Bebidas", "Snacks", "General"]
-    return render(request, 'productos/registrar.html', {'categorias': categorias})
+    unidades = ["Litros", "Kilos", "Gramos", "Paquete", "Bolsa", "General"]
+    
+    return render(request, 'productos/registrar.html', {'categorias': categorias,'unidades': unidades})
 
 # Editar producto
 def editar(request, id_producto):
     producto = get_object_or_404(Producto, id=id_producto)
     categorias = ["Lacteos", "Pan", "Frutas", "Bebidas", "Snacks", "General"]
+    unidades = ["Litros", "Kilos", "Gramos", "Paquete", "Bolsa", "General"]
+    
     
     if request.method == 'POST':
-        producto.nombre = request.POST.get('nombre')
+        producto.nomProducto = request.POST.get('nomProducto')
         producto.categoria = request.POST.get('categoria')
+        producto.tipoUnidad = request.POST.get('tipoUnidad')
         
         # Convertir precios correctamente
-        precio_compra_str = request.POST.get('precio_compra', '0')
-        precio_venta_str = request.POST.get('precio_venta', '0')
+        precio_compra_str = request.POST.get('precioCompra', '0')
+        precio_venta_str = request.POST.get('precioVenta', '0')
         
         # Reemplazar coma por punto si existe
         precio_compra_str = precio_compra_str.replace(',', '.')
@@ -57,34 +69,35 @@ def editar(request, id_producto):
         
         # Convertir a Decimal
         try:
-            producto.precio_compra = Decimal(precio_compra_str) if precio_compra_str else 0.0
-            producto.precio_venta = Decimal(precio_venta_str) if precio_venta_str else 0.0
+            producto.precioCompra = Decimal(precio_compra_str) if precio_compra_str else 0.0
+            producto.precioVenta = Decimal(precio_venta_str) if precio_venta_str else 0.0
         except ValueError:
-            producto.precio_compra = 0.0
-            producto.precio_venta = 0.0
+            producto.precioCompra = 0.0
+            producto.precioVenta = 0.0
 
             
         
         # Convertir stock a entero
-        stock_str = request.POST.get('stock', '0')
+        stock_str = request.POST.get('stockActual', '0')
         try:
-            producto.stock = int(stock_str) if stock_str else 0
+            producto.stockActual = int(stock_str) if stock_str else 0
         except ValueError:
-            producto.stock = 0
+            producto.stockActual = 0
         
         producto.estado = request.POST.get('estado')
         
-        if not producto.nombre:
+        if not producto.nomProducto:
             messages.error(request, 'El nombre es obligatorio')
             return redirect('productos:editar', id_producto=id_producto)
         
         producto.save()
-        messages.success(request, f'Producto "{producto.nombre}" actualizado')
+        messages.success(request, f'Producto "{producto.nomProducto}" actualizado')
         return redirect('productos:inventario')
     
     return render(request, 'productos/editar.html', {
         'producto': producto,
-        'categorias': categorias
+        'categorias': categorias,
+        'unidades': unidades
     })
 
 # Cambiar estado a inactivo (en lugar de eliminar)
@@ -92,11 +105,11 @@ def eliminar(request, id_producto):
     producto = get_object_or_404(Producto, id=id_producto)
     
     if request.method == 'POST':
-        nombre = producto.nombre
+        nomProducto = producto.nomProducto
         # Cambiar estado a 'inactivo' en lugar de eliminar
         producto.estado = 'inactivo'  
         producto.save()
-        messages.success(request, f'Producto "{nombre}" marcado como inactivo')
+        messages.success(request, f'Producto "{nomProducto}" marcado como inactivo')
         return redirect('productos:inventario')
     
     return render(request, 'productos/eliminar.html', {'producto': producto})
@@ -112,5 +125,5 @@ def ejecutar_recuperacion(request, id_producto):
     producto = get_object_or_404(Producto, id=id_producto)
     producto.estado = 'activo'  # ← minúscula
     producto.save()
-    messages.success(request, f"¡{producto.nombre} ha vuelto al inventario!")  # ← nombre, no nom_producto
+    messages.success(request, f"¡{producto.nomProducto} ha vuelto al inventario!")  # ← nombre, no nom_producto
     return redirect('productos:lista_recuperar')  # ← nombre correcto de la URL

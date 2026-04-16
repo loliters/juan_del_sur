@@ -4,25 +4,29 @@ from decimal import Decimal
 # Create your models here.
 
 class Producto(models.Model):
+
     ESTADO_CHOICES = [
         ('activo', 'Activo'),
         ('inactivo', 'Inactivo'),
     ]
+
+    # Basado en la tabla 'productos' del diagrama
     
-    nombre = models.CharField(max_length=200, verbose_name="Nombre del producto")
-    categoria = models.CharField(max_length=100, default="General", verbose_name="Categoría")
-    precio_compra = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de compra")
-    precio_venta = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de venta")
-    stock = models.IntegerField(default=0, verbose_name="Stock disponible") #esta con esto porque es una cagada hacerlo de otra manera
+    codProducto = models.CharField(max_length=45, unique=True, verbose_name="Código de Producto",null=True)
+    nomProducto = models.CharField(max_length=100, verbose_name="Nombre del Producto")
+    precioCompra = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de Compra")
+    precioVenta = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de Venta")
+    stockActual = models.IntegerField(default=0, verbose_name="Stock disponible") #esta con esto porque es una cagada hacerlo de otra manera
+    tipoUnidad = models.CharField(max_length=100, verbose_name="Unidad De Medición del Producto") #lo mismo que stockActual
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activo', verbose_name="Estado")
-    creado_en = models.DateTimeField(auto_now_add=True)
-    actualizado_en = models.DateTimeField(auto_now=True)
-    
+    categoria = models.CharField(max_length=100, default="General", verbose_name="Categoría")
+
+
     def __str__(self):
-        return self.nombre
-    
-    
+        return self.nomProducto
+
     class Meta:
+        db_table = 'productos'
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
-        ordering = ['nombre']
+        ordering = ['nomProducto']

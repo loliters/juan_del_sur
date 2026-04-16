@@ -130,16 +130,18 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Producto</th>
-                    <th>Estado Anterior</th>
+                    <th>Codigo</th>
+                    <th>Estado</th>
+                    <th>Tipo Unidad</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for p in productos %}
                 <tr>
-                    <td class="text-muted">{{ p.id }}</td>
-                    <td class="fw-medium">{{ p.nombre }}</td>
+                    <td class="text-muted">{{ p.codProducto }}</td>
+                    <td class="fw-medium">{{ p.nomProducto }}</td>
+                    <td class="fw-medium">{{ p.tipoUnidad }}</td>
                     <td>
                         <span class="badge-inactivo">Inactivo</span>
                     </td>
