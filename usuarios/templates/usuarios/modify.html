@@ -27,49 +27,70 @@
 
 <body>
 
-{% if user.is_authenticated and user.is_superuser %}
-
 <div class="card-form">
 
-  <h5>Modificar Usuario</h5>
+  <h5 class="mb-3">Modificar Usuario</h5>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
 
   <form method="POST">
     {% csrf_token %}
 
+    <!-- Nombre (bloqueado) -->
     <div class="mb-3">
       <label>Nombre</label>
-      <input type="text" name="nombre" class="form-control" value="{{ usuario.username }}">
+      <input type="text" class="form-control" value="{{ usuario.nom_usuario }}" disabled>
     </div>
 
+    <!-- Apellido 1 (bloqueado) -->
+    <div class="mb-3">
+      <label>Primer Apellido</label>
+      <input type="text" class="form-control" value="{{ usuario.ap1 }}" disabled>
+    </div>
+
+    <!-- Apellido 2 (bloqueado) -->
+    <div class="mb-3">
+      <label>Segundo Apellido</label>
+      <input type="text" class="form-control" value="{{ usuario.ap2 }}" disabled>
+    </div>
+
+    <!-- Email (bloqueado) -->
     <div class="mb-3">
       <label>Email</label>
-      <input type="email" name="email" class="form-control" value="{{ usuario.email }}">
+      <input type="email" class="form-control" value="{{ usuario.email }}" disabled>
     </div>
 
+    <!-- Rol (EDITABLE) -->
     <div class="mb-3">
       <label>Rol</label>
       <select name="rol" class="form-select">
-        <option value="Admin">Admin</option>
-        <option value="Cajero">Cajero</option>
+        {% for r in roles %}
+          <option value="{{ r.id }}" {% if usuario.rol.id == r.id %}selected{% endif %}>
+            {{ r.nom_rol }}
+          </option>
+        {% endfor %}
       </select>
     </div>
 
+    <!-- Estado (EDITABLE) -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <label class="mb-0">Activo</label>
+      <input type="checkbox" name="estado" {% if usuario.estado %}checked{% endif %}>
+    </div>
+
     <button class="btn btn-primary w-100">
-      Guardar
+      Guardar cambios
     </button>
 
   </form>
 
 </div>
-
-{% else %}
-
-<script>
-  alert("Acceso denegado");
-  window.location.href = "{% url 'login' %}";
-</script>
-
-{% endif %}
 
 </body>
 </html>
