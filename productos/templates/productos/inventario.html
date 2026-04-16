@@ -75,8 +75,11 @@
     <a href="{% url 'dashboard_admin' %}">Gestión de Usuarios</a>
     <a href="{% url 'productos:inventario' %}">Productos</a>
     <a href="#">Reportes</a>
+    <a href="{% url 'productos:lista_recuperar' %}">
+        Ver inactivos
+    </a>
     <hr>
-    <a href="login.html">Cerrar sesión</a>
+    <a href="{% url 'logout' %}">Cerrar sesión</a>
 </div>
 
 <!-- CONTENIDO PRINCIPAL CON WRAPPER -->
@@ -142,9 +145,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        <div class="mt-3">
-            <a href="{% url 'productos:lista_recuperar' %}" class="btn btn-nuevo px-4">Recuperar Producto</a>
-        </div>
     </div>
 </div>
 

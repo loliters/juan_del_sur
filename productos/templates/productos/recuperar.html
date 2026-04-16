@@ -98,12 +98,14 @@
 <!-- MENÚ VERTICAL (SIDEBAR) -->
 <div class="sidebar">
     <h5>Dashboard</h5>
-    <a href="#">Inicio</a>
-    <a href="#">Gestión de Usuarios</a>
-    <a href="{% url 'productos:inventario' %}">Productos</a>
-    <a href="#">Reportes</a>
-    <hr>
-    <a href="login.html">Cerrar sesión</a>
+    <a href="{% url 'productos:inventario' %}" style="color:#ffc107;">
+     Regresar
+  </a>
+
+  
+  <hr>
+
+  <a href="{% url 'logout' %}">Cerrar sesión</a>
 </div>
 
 <!-- CONTENIDO PRINCIPAL CON WRAPPER -->
@@ -121,9 +123,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold">Productos para Recuperar</h2>
-            <a href="{% url 'productos:inventario' %}" class="btn btn-volver">
-                <i class="bi bi-arrow-left"></i> Volver al Inventario
-            </a>
+            
         </div>
 
         <table class="table align-middle">

@@ -127,3 +127,13 @@ def ejecutar_recuperacion(request, id_producto):
     producto.save()
     messages.success(request, f"¡{producto.nomProducto} ha vuelto al inventario!")  # ← nombre, no nom_producto
     return redirect('productos:lista_recuperar')  # ← nombre correcto de la URL
+
+
+    # =========================
+# LOGOUT
+# =========================
+def logout_view(request):
+
+    request.session.flush()
+    return redirect('login')
+#==========================

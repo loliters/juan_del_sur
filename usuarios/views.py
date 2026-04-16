@@ -200,7 +200,7 @@ def register(request):
         base = '.'.join(partes) if partes else 'usuario'
         
         # Dominio fijo
-        dominio = "juandedios.com"
+        dominio = "juandelsur.com"
         
         # ==========================================
         # VALIDACIÓN 6: Evitar duplicados de email
@@ -311,7 +311,7 @@ def generar_email_preview(request):
             partes.append(segundo_apellido)
         
         base = '.'.join(partes) if partes else 'usuario'
-        dominio = "juandedios.com"
+        dominio = "juandelsur.com"
         
         email_generado = f"{base}@{dominio}"
         
@@ -348,7 +348,7 @@ def dashboard_admin(request):
     if request.session.get('rol') != "administrador":
         return redirect('login')
 
-    usuarios = Usuario.objects.select_related('rol').all()
+    usuarios = Usuario.objects.select_related('rol').all().filter(estado=True)
 
     return render(request, 'usuarios/dashboard_admin.html', {
         'usuarios': usuarios
@@ -409,13 +409,18 @@ def logout_view(request):
 #eliminar
 #==========================
 def eliminar_usuario(request, id):
-
+    # Verificar que el usuario sea administrador
     if request.session.get('rol') != "administrador":
         return redirect('login')
-
+    
+    # Obtener el usuario
     usuario = Usuario.objects.get(id=id)
-    usuario.delete()
-
+    
+    # Cambiar el estado a False (inactivo) en lugar de eliminar
+    usuario.estado = False
+    usuario.save()
+    
+    
     return redirect('dashboard_admin')
 
 #inactivos
