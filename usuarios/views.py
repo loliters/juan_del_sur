@@ -359,7 +359,9 @@ def dashboard_admin(request):
 # MODIFICAR USUARIO
 # =========================
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from .models import Usuario, Rol
+import re
 
 
 def modify(request, id):
@@ -378,26 +380,157 @@ def modify(request, id):
 
     if request.method == "POST":
 
-        # 🔒 estado
-        usuario.estado = request.POST.get('estado') == 'on'
-
-        # 🔒 rol
+        # ==========================================
+        # OBTENER DATOS DEL FORMULARIO
+        # ==========================================
+        nom_usuario = request.POST.get('nom_usuario', '').strip()
+        ap1 = request.POST.get('ap1', '').strip()
+        ap2 = request.POST.get('ap2', '').strip()
+        email = request.POST.get('email', '').strip()
+        estado = request.POST.get('estado') == 'on'
         rol_id = request.POST.get('rol')
-        if rol_id:
-            try:
-                usuario.rol = Rol.objects.get(id=rol_id)
-            except Rol.DoesNotExist:
-                pass
 
-        usuario.save()
+        # Al menos nombre o un apellido
+        if not nom_usuario and not ap1 and not ap2:
+            messages.error(request, 'Debes ingresar al menos un nombre o apellido')
+            return redirect('modify', id=id)
 
+        # Solo letras (sin números)
+        pattern_letters = r'^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$'
+        
+        if nom_usuario:
+            if not re.match(pattern_letters, nom_usuario):
+                messages.error(request, 'El nombre solo debe contener letras (sin números)')
+                return redirect('modify', id=id)
+            if len(nom_usuario.strip()) == 0:
+                messages.error(request, 'El nombre no puede estar vacío')
+                return redirect('modify', id=id)
+        
+        if ap1:
+            if not re.match(pattern_letters, ap1):
+                messages.error(request, 'El primer apellido solo debe contener letras (sin números)')
+                return redirect('modify', id=id)
+        
+        if ap2:
+            if not re.match(pattern_letters, ap2):
+                messages.error(request, 'El segundo apellido solo debe contener letras (sin números)')
+                return redirect('modify', id=id)
+
+        # Rol existe
+        if not rol_id:
+            messages.error(request, 'Debes seleccionar un rol')
+            return redirect('modify', id=id)
+            
+        try:
+            rol_obj = Rol.objects.get(id=rol_id)
+        except Rol.DoesNotExist:
+            messages.error(request, 'Rol inválido')
+            return redirect('modify', id=id)
+
+        # Caracteres especiales no permitidos
+        caracteres_especiales = r'[!@#$%^&*()_+=\[\]{};:""\\|,.<>/?]'
+        if nom_usuario and re.search(caracteres_especiales, nom_usuario):
+            messages.error(request, 'El nombre no debe contener caracteres especiales')
+            return redirect('modify', id=id)
+        
+        if ap1 and re.search(caracteres_especiales, ap1):
+            messages.error(request, 'El primer apellido no debe contener caracteres especiales')
+            return redirect('modify', id=id)
+        
+        if ap2 and re.search(caracteres_especiales, ap2):
+            messages.error(request, 'El segundo apellido no debe contener caracteres especiales')
+            return redirect('modify', id=id)
+
+        # Longitud máxima
+        if nom_usuario and len(nom_usuario) > 100:
+            messages.error(request, 'El nombre es demasiado largo (máximo 100 caracteres)')
+            return redirect('modify', id=id)
+        
+        if ap1 and len(ap1) > 100:
+            messages.error(request, 'El primer apellido es demasiado largo (máximo 100 caracteres)')
+            return redirect('modify', id=id)
+        
+        if ap2 and len(ap2) > 100:
+            messages.error(request, 'El segundo apellido es demasiado largo (máximo 100 caracteres)')
+            return redirect('modify', id=id)
+
+        # Verificar que el email no sea usado por OTRO usuario
+        if email:
+            # Verificar si el email ya existe en otro usuario (diferente al que estamos editando)
+            email_existente = Usuario.objects.filter(email=email).exclude(id=usuario.id).exists()
+            if email_existente:
+                messages.error(request, f'El correo {email} ya está en uso por otro usuario')
+                return redirect('modify', id=id)
+            
+            # Validar formato de email
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                messages.error(request, 'Formato de correo electrónico inválido')
+                return redirect('modify', id=id)
+        
+        # Generar email si no viene del formulario
+        # Si el email no viene del formulario o está vacío, generarlo automáticamente
+        if not email:
+            # Generar email con la misma lógica que en register
+            partes = []
+            
+            if nom_usuario:
+                nombre_limpio = re.sub(r'\s+', ' ', nom_usuario).strip()
+                primer_nombre = nombre_limpio.split()[0].lower()
+                partes.append(primer_nombre)
+            
+            if ap1:
+                apellido_limpio = re.sub(r'\s+', ' ', ap1).strip()
+                primer_apellido = apellido_limpio.split()[0].lower()
+                partes.append(primer_apellido)
+            elif ap2:
+                apellido_limpio = re.sub(r'\s+', ' ', ap2).strip()
+                segundo_apellido = apellido_limpio.split()[0].lower()
+                partes.append(segundo_apellido)
+            
+            base = '.'.join(partes) if partes else 'usuario'
+            dominio = "juandelsur.com"
+            
+            email_generado = f"{base}@{dominio}"
+            email_final = email_generado
+            contador = 1
+            
+            # Buscar si ya existe el email (excluyendo al usuario actual)
+            while Usuario.objects.filter(email=email_final).exclude(id=usuario.id).exists():
+                contador += 1
+                email_final = f"{base}{contador}@{dominio}"
+            
+            email = email_final
+
+        # Email no muy largo
+        if len(email) > 254:
+            messages.error(request, 'El email es demasiado largo')
+            return redirect('modify', id=id)
+
+        # ==========================================
+        # ACTUALIZAR USUARIO
+        # ==========================================
+        try:
+            usuario.nom_usuario = nom_usuario
+            usuario.ap1 = ap1
+            usuario.ap2 = ap2
+            usuario.email = email
+            usuario.estado = estado
+            usuario.rol = rol_obj
+            
+            usuario.save()
+            
+            messages.success(request, f'✅ Usuario actualizado correctamente. Nuevo email: {email}')
+            
+        except IntegrityError as e:
+            messages.error(request, f'Error al actualizar usuario: {str(e)}')
+            return redirect('modify', id=id)
+        
         return redirect('dashboard_admin')
 
     return render(request, 'usuarios/modify.html', {
         'usuario': usuario,
         'roles': roles
     })
-
 # =========================
 # LOGOUT
 # =========================
