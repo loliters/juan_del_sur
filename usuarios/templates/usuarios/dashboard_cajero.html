@@ -366,15 +366,6 @@
 </head>
 <body>
 
-<script>
-  (function(){
-    let rol = localStorage.getItem("rol");
-    if(rol !== "Cajero"){
-      alert("🔐 Acceso solo para cajeros. Redirigiendo...");
-      window.location.href = "login.html";
-    }
-  })();
-</script>
 
 <div class="top-header">
   <button class="btn-header active" id="btnProductos" onclick="showProductsView()">
